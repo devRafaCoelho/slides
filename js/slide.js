@@ -59,8 +59,37 @@ export default class Slide {
     this.wrapper.addEventListener("touchend", this.handleEndEvent);
   }
 
+  handleSlideCenterPosition(slide) {
+    const margin = (this.wrapper.offsetWidth - slide.offsetWidth) / 2;
+    return -(slide.offsetLeft - margin);
+  }
+
+  handleSlidesConfig() {
+    this.slideArray = [...this.slide.children].map((element) => {
+      const position = this.handleSlideCenterPosition(element);
+      return { position, element };
+    });
+  }
+
+  handleSlidesIndexNavigation(index) {
+    const last = this.slideArray.length - 1;
+    this.index = {
+      prev: index ? index - 1 : undefined,
+      active: index,
+      next: index === last ? undefined : index + 1,
+    };
+  }
+
+  handleChangeSlide(index) {
+    const activeSlide = this.slideArray[index];
+    this.handleMoveSlide(activeSlide.position);
+    this.handleSlidesIndexNavigation(index);
+    this.distance.finalPosition = activeSlide.position;
+  }
+
   init() {
     this.addEvents();
+    this.handleSlidesConfig();
     return this;
   }
 }
