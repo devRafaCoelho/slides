@@ -1,3 +1,5 @@
+import debounce from "./debounce.js";
+
 export default class Slide {
   constructor(slide, wrapper) {
     this.slide = document.querySelector(slide);
@@ -7,10 +9,12 @@ export default class Slide {
       startX: 0,
       movement: 0,
     };
+    this.activeClass = "active";
 
     this.handleStart = this.handleStart.bind(this);
     this.handleEndEvent = this.handleEndEvent.bind(this);
     this.handleMove = this.handleMove.bind(this);
+    this.handleResize = debounce(this.handleResize.bind(this), 200);
   }
 
   handleMoveSlide(distanceX) {
@@ -56,16 +60,16 @@ export default class Slide {
   }
 
   handleChangeSlideEndEvent() {
-    if (this.distance.movement > 0 && this.index.next !== undefined) {
+    if (this.distance.movement > 120 && this.index.next !== undefined) {
       this.handleActiveNextSlide();
-    } else if (this.distance.movement < 0 && this.index.prev !== undefined) {
+    } else if (this.distance.movement < -120 && this.index.prev !== undefined) {
       this.handleActivePrevSlide();
     } else {
       this.handleChangeSlide();
     }
   }
 
-  addEvents() {
+  handleAddEvents() {
     this.wrapper.addEventListener("mousedown", this.handleStart);
     this.wrapper.addEventListener("touchstart", this.handleStart);
     this.wrapper.addEventListener("mouseup", this.handleEndEvent);
@@ -98,6 +102,14 @@ export default class Slide {
     this.handleMoveSlide(activeSlide.position);
     this.handleSlidesIndexNavigation(index);
     this.distance.finalPosition = activeSlide.position;
+    this.handleChangeActiveClass();
+  }
+
+  handleChangeActiveClass() {
+    this.slideArray.forEach((item) =>
+      item.element.classList.remove(this.activeClass)
+    );
+    this.slideArray[this.index.active].element.classList.add(this.activeClass);
   }
 
   handleActivePrevSlide() {
@@ -116,10 +128,22 @@ export default class Slide {
     this.slide.style.transition = active ? "transform 0.3s" : "";
   }
 
+  handleResize() {
+    setTimeout(() => {
+      this.handleSlidesConfig();
+      this.handleChangeSlide(this.index.active);
+    }, 1000);
+  }
+
+  handleResizeEvent() {
+    window.addEventListener("resize", this.handleResize);
+  }
+
   init() {
-    this.addEvents();
+    this.handleAddEvents();
     this.handleSlidesConfig();
     this.handleTransition(true);
+    this.handleResizeEvent();
     return this;
   }
 }
